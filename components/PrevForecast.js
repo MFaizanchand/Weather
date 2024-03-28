@@ -1,52 +1,57 @@
 import { View, Text, FlatList, Dimensions, Alert } from 'react-native'
 import firestore from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
-import {
-  LineChart,
-
-} from "react-native-chart-kit";
+import { LineChart } from "react-native-chart-kit";
 const PrevForecast = ({ route }) => {
   const selectedcity = route.params.selectedcity;
   console.log("selected city", route.params.selectedcity)
   const [loading, setLoading] = useState(true); // Set loading to true on component mount
   const [users, setUsers] = useState([]);
-  // const Delete = () => {
-  //   if (selected.length > 7) {
-  //     // Delete data from Firestore
-  //     // firestore.collection("firestore").doc(selectedcity).collection('weather').Delete()
-  //     //   .then(() => {
-  //     //     Alert.alert("Data deleted successfully")
-  //     //   })
-  //     //   .catch((error) => {
-  //     //     console.error("Error deleting data: ", error);
-  //     //     Alert.alert("Failed to delete data");
-  //     //   });
-  //   } else {
-  //     // Alert the user that the selected items are not sufficient for deletion
-  //     Alert.alert("Selected items are not greater than 7. Cannot delete data.");
-  //   }
-  // }
+
+  const Delete = (users) => {
+    console.log("user length", users[0].key)
+    if (users.length > 7) {
+      // Delete data from Firestore
+      firestore().collection("forecast").doc(selectedcity).collection('weather').doc(users[0].key).delete()
+        .then(() => {
+          // Alert.alert("Data deleted successfully")
+           console.log('Data deleted successfully');          
+        })
+        .catch((error) => {
+          console.error("Error deleting data: ", error);
+          // Alert.alert("Failed to delete data");
+          console.log("Failed to delete data")
+        });
+    } else {
+      // Alert the user that the selected items are not sufficient for deletion
+      // Alert.alert("Selected items are not greater than 7. Cannot delete data.");
+      console.log("Selected items are not greater than 7. Cannot delete data.")
+    }
+  }
 
   useEffect(() => {
     const subscriber = firestore()
       .collection('forecast').doc(selectedcity).collection('weather')
       .onSnapshot(querySnapshot => {
         const users = [];
+
         querySnapshot.forEach(documentSnapshot => {
           users.push({
             ...documentSnapshot.data(),
             key: documentSnapshot.id,
           });
+          console.log("ID", documentSnapshot.id)
+          documentID = documentSnapshot.id;
+
         });
-        console.log("Users", users);
+
+        // console.log("Users", users[0].key);  // users.length > 7 then delete index 0 data
         setUsers(users);
         setLoading(false);
-
-
-
+        Delete(users);
       });
-    // Unsubscribe from events when no longer in use
 
+    // Unsubscribe from events when no longer in use
     return () => subscriber();
   }, []);
   var estimate = []
@@ -73,7 +78,7 @@ const PrevForecast = ({ route }) => {
           </View>
         )}
       /> */}
-      {estimate.length > 0 ? (<LineChart
+      {estimate.length > 0 ? (<LineChart    // check if weather length is zero or also checking for delaying data in array (exception handling app crashing)
         data={{
           labels: temp_date
           //  [12 , 13 , 14 , 15 , 16]
@@ -81,7 +86,6 @@ const PrevForecast = ({ route }) => {
             {
               data:
                 estimate
-              //  [] 
               // [  Math.random() * 100,               
               //   Math.random() * 100,  
               //   Math.random() * 100,   
@@ -123,5 +127,4 @@ const PrevForecast = ({ route }) => {
     </View>
   )
 }
-
 export default PrevForecast

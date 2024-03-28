@@ -9,7 +9,8 @@ const HomeScreen = ({ navigation }) => {
   const [showSearch, setshowSearch] = useState(false);
   const [locations, setLocation] = useState([]);
   const [weather, setWeather] = useState({});
-
+  const [user, setuser] = useState([]);
+  var myArray = []
   const requestLocationPermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -48,16 +49,61 @@ const HomeScreen = ({ navigation }) => {
     if (value.length > 2) {              //if search baar letters is > 2
       fetchLocations({ cityName: value }).then(data => {
         setLocation(data);
+        console.log("Search" , user)
       })
     }
   }
+  const ReturnID = async () => {
+    try {
+        const querySnapshot = await firestore()
+            .collection('forecast')
+            .doc(location?.name)
+            .collection('weather')
+            .get();
 
+        const users = querySnapshot.docs.map(doc => ({
+          // ...documentSnapshot.data(),  
+            ...doc.data(), 
+          // key: documentSnapshot.id,         
+            key: doc.id,
+        }));                 
 
+        const ID =  users.length;
+         console.log("Users",ID)
+        setuser(users);
+        myArray.push(...users);
+        console.log("function call");
+    console.log("Location Data" , user)
+        return ID;
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        return null; // Or handle the error appropriately
+    }
+};
+// const users = [];
   useEffect(() => {         // fetch weather firstly when you start
-    // fetchmyweatherdata()
-    console.log("request");
-    requestLocationPermission();
-
+    fetchmyweatherdata()  
+      
+    // const subscriber  =  firestore()
+    // .collection('forecast').doc(location?.name).collection('weather')
+    // .onSnapshot(querySnapshot => {
+      
+    //   querySnapshot.forEach(documentSnapshot => {
+    //     users.push({
+    //       ...documentSnapshot.data(),
+    //       key: documentSnapshot.id,
+    //     });
+    //     console.log("ID", documentSnapshot.id)
+    //     // console.log("data", users)    
+    //     documentID = documentSnapshot.id;
+    //     // data = users
+    //       // setuser(users) 
+    //   });
+    //   console.log("data", users)    //data is showing here
+    //   // console.log("Users", data);  // users.length > 7 then delete index 0 data
+      
+    // });
+    ReturnID()
   }, []);
 
   const fetchmyweatherdata = async () => {   // for starting an app
@@ -77,30 +123,37 @@ const HomeScreen = ({ navigation }) => {
     }).then(data => {
       setWeather(data);
       addPrevLoc(data)  // Saving data from api
-
       console.log('got data', data?.location?.localtime.split(" ")[0])
     })
+    ReturnID()
   }
   const handleTextdebounce = useCallback(debounce(handleSearch, 1200), []);   // debounce is used for for get request to api after writing one letter
   const { current, location } = weather;   // Geting data from api
   const addPrevLoc = (loc) => {
-    const number = Math.floor(Math.random() * 10);
-    console.log("Number", number);
-
-    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc(number.toString()).set({
+    // const number = Math.floor(Math.random() * 10);
+    // if (isNaN(num) || num < 1 || num >= 7) {
+    //   num = 1;
+    // } else {
+    //   num++;
+    //   if (num >= 7) {
+    //     num = 1; // Reset to 1 if num reaches 7
+    //   }
+    // }
+    // console.log("Num111:", myArray);
+  // }
+    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc((user.length + 1).toString()).set({
       recentloc: loc.location.name,                       // location.name 
       estimatedtemp: loc.current.temp_c,
       Date: loc?.location?.localtime.split(" ")[0]                   //
-
     }).then(() => {
       console.log("data added")
     })
-    // console.log("sds" ,newloc)
   }
   return (
     <View className='flex-1 relative' style={{ backgroundColor: '#393027' }} >
       <StatusBar style="light" />
       <SafeAreaView className='flex flex-1' >
+
         <View style={{ height: '7' }} className='mx-4 relative z-50' >
           <View className='flex-row justify-end items-center rounded-full mt-3'
             style={{ backgroundColor: showSearch ? '#221910' : 'transparent' }}>
@@ -116,13 +169,17 @@ const HomeScreen = ({ navigation }) => {
               className='rounded-full p-3 m-1 ' >
               <Image source={require('../assets/search1.png')} />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: '#221910' }}
+              className='rounded-full p-3 '
+              onPress={() => navigation.navigate('PrevForecast', { selectedcity: location?.name })} >
+              <Image source={require('../assets/bar-chart.png')} /></TouchableOpacity>
           </View>
           {locations.length > 0 && showSearch ? (
             <View className='absolute w-full bg-gray-300 top-16 rounded-3xl ' >
               {locations.map((loc, index) => {
                 return (
                   <TouchableOpacity
-                    //  onLongPress={() =>addPrevLoc(loc)}
                     onPress={() => handleloc(loc)}
                     key={index} loc
                     className={'flex-row items-center border-0 p-3 px-2 '}>
@@ -133,14 +190,13 @@ const HomeScreen = ({ navigation }) => {
               })}
             </View>) : null
           }
+
         </View>
         {/* // new sec   */}
         <View className='mx-4 flex justify-around flex-1 mb-2' >
           <Text className='text-white text-center text-2xl font-bold' >
             {location?.name}
-            <TouchableOpacity
-              onPress={() => navigation.navigate('PrevForecast', { selectedcity: location?.name })} >
-              <Image source={require('../assets/bar-chart.png')} /></TouchableOpacity>
+
             <Text className='text-lg font-semibold text-gray-300' >
               {" " + location?.country}
             </Text>
