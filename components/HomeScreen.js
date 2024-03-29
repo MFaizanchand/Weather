@@ -53,6 +53,7 @@ const HomeScreen = ({ navigation }) => {
       })
     }
   }
+  
   const ReturnID = async () => {
     try {
         const querySnapshot = await firestore()
@@ -74,7 +75,7 @@ const HomeScreen = ({ navigation }) => {
         myArray.push(...users);
         console.log("function call");
     console.log("Location Data" , user)
-        return ID;
+        return ID ;
     } catch (error) {
         console.error("Error fetching data:", error);
         return null; // Or handle the error appropriately
@@ -129,7 +130,7 @@ const HomeScreen = ({ navigation }) => {
   }
   const handleTextdebounce = useCallback(debounce(handleSearch, 1200), []);   // debounce is used for for get request to api after writing one letter
   const { current, location } = weather;   // Geting data from api
-  const addPrevLoc = (loc) => {
+  const addPrevLoc = async (loc) => {
     // const number = Math.floor(Math.random() * 10);
     // if (isNaN(num) || num < 1 || num >= 7) {
     //   num = 1;
@@ -141,13 +142,18 @@ const HomeScreen = ({ navigation }) => {
     // }
     // console.log("Num111:", myArray);
   // }
-    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc((user.length + 1).toString()).set({
+    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc(( ReturnID() + 1).toString()).set({
+  
       recentloc: loc.location.name,                       // location.name 
       estimatedtemp: loc.current.temp_c,
-      Date: loc?.location?.localtime.split(" ")[0]                   //
-    }).then(() => {
-      console.log("data added")
+      Date: loc?.location?.localtime.split(" ")[0]        
+                 //
+    }).catch((err)=>{
+      alert(err);
+    
     })
+    console.log("data set");
+    console.log("Users",ReturnID())
   }
   return (
     <View className='flex-1 relative' style={{ backgroundColor: '#393027' }} >
