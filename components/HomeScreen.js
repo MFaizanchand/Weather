@@ -82,7 +82,12 @@ const HomeScreen = ({ navigation }) => {
     }
 };
 // const users = [];
-  useEffect(() => {         // fetch weather firstly when you start
+  useEffect(() => { 
+    ReturnID().then((res)=>{
+      console.log("ID return", res);
+    })
+      
+          // fetch weather firstly when you start
     fetchmyweatherdata()  
       
     // const subscriber  =  firestore()
@@ -104,7 +109,7 @@ const HomeScreen = ({ navigation }) => {
     //   // console.log("Users", data);  // users.length > 7 then delete index 0 data
       
     // });
-    ReturnID()
+    
   }, []);
 
   const fetchmyweatherdata = async () => {   // for starting an app
@@ -114,7 +119,7 @@ const HomeScreen = ({ navigation }) => {
       setWeather(data)
     })
   }
-  const handleloc = (loc) => {
+  const handleloc = async(loc) => {
     console.log('location :', loc);
     setLocation([]);
     setshowSearch(false);
@@ -126,7 +131,8 @@ const HomeScreen = ({ navigation }) => {
       addPrevLoc(data)  // Saving data from api
       console.log('got data', data?.location?.localtime.split(" ")[0])
     })
-    ReturnID()
+    console.log('handleLocUser',await ReturnID());
+    
   }
   const handleTextdebounce = useCallback(debounce(handleSearch, 1200), []);   // debounce is used for for get request to api after writing one letter
   const { current, location } = weather;   // Geting data from api
@@ -153,7 +159,7 @@ const HomeScreen = ({ navigation }) => {
     
     })
     console.log("data set");
-    console.log("Users",ReturnID())
+    console.log("Users1",  ReturnID())
   }
   return (
     <View className='flex-1 relative' style={{ backgroundColor: '#393027' }} >
