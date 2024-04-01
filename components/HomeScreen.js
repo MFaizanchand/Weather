@@ -54,11 +54,12 @@ const HomeScreen = ({ navigation }) => {
     }
   }
   
-  const ReturnID = async () => {
+  const ReturnID = async (loc) => {
+    console.log("Getting Loc Code",loc);
     try {
         const querySnapshot = await firestore()
             .collection('forecast')
-            .doc(location?.name)
+            .doc(loc)
             .collection('weather')
             .get();
 
@@ -69,7 +70,7 @@ const HomeScreen = ({ navigation }) => {
             key: doc.id,
         }));                 
 
-        const ID =  users.length;
+        const ID =  parseInt(users[users.length-1].key)+1;
          console.log("Users",ID)
         setuser(users);
         myArray.push(...users);
@@ -83,9 +84,9 @@ const HomeScreen = ({ navigation }) => {
 };
 // const users = [];
   useEffect(() => { 
-    ReturnID().then((res)=>{
-      console.log("ID return", res);
-    })
+    // ReturnID().then((res)=>{
+    //   console.log("ID return", res);
+    // })
       
           // fetch weather firstly when you start
     fetchmyweatherdata()  
@@ -129,9 +130,9 @@ const HomeScreen = ({ navigation }) => {
     }).then(data => {
       setWeather(data);
       addPrevLoc(data)  // Saving data from api
-      console.log('got data', data?.location?.localtime.split(" ")[0])
+      console.log('got data', data)
     })
-    console.log('handleLocUser',await ReturnID());
+    // console.log('handleLocUser',await ReturnID());
     
   }
   const handleTextdebounce = useCallback(debounce(handleSearch, 1200), []);   // debounce is used for for get request to api after writing one letter
@@ -148,7 +149,7 @@ const HomeScreen = ({ navigation }) => {
     // }
     // console.log("Num111:", myArray);
   // }
-    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc(( ReturnID() + 1).toString()).set({
+    const newloc = firestore().collection("forecast").doc(loc?.location?.name).collection('weather').doc((await ReturnID(loc?.location?.name)).toString()).set({
   
       recentloc: loc.location.name,                       // location.name 
       estimatedtemp: loc.current.temp_c,
@@ -159,7 +160,7 @@ const HomeScreen = ({ navigation }) => {
     
     })
     console.log("data set");
-    console.log("Users1",  ReturnID())
+    // console.log("Users1",  await ReturnID())
   }
   return (
     <View className='flex-1 relative' style={{ backgroundColor: '#393027' }} >
